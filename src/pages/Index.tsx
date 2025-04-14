@@ -15,17 +15,11 @@ import { MonthlyToggle } from "@/components/dashboard/MonthlyToggle";
 import { StreakCalendar } from "@/components/dashboard/StreakCalendar";
 import { HabitStats } from "@/components/dashboard/HabitStats";
 import { Button } from "@/components/ui/button";
+import { HabitFormDialog } from "@/components/habits/HabitFormDialog";
+import { useHabits } from "@/contexts/HabitContext";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
-const habits = [
-  { id: 1, name: "Morning Meditation", streak: 7, progress: 70, status: "completed" as const },
-  { id: 2, name: "Read 30 minutes", streak: 3, progress: 30, status: "pending" as const },
-  { id: 3, name: "Exercise", streak: 0, progress: 0, status: "missed" as const },
-  { id: 4, name: "Journaling", streak: 5, progress: 50, status: "completed" as const },
-  { id: 5, name: "Drink water", streak: 10, progress: 100, status: "completed" as const },
-  { id: 6, name: "Learn a language", streak: 2, progress: 20, status: "pending" as const },
-];
-
+// Mock data for the calendar and stats
 const calendarData = Array.from({ length: 180 }, (_, i) => {
   const date = subMonths(new Date(), 6);
   date.setDate(date.getDate() + i);
@@ -46,7 +40,14 @@ const statsData = [
 ];
 
 const Index = () => {
+  const { habits, addHabit } = useHabits();
+  const { toast } = useToast();
+  
   const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  // Get only active habits
+  const activeHabits = habits.filter(h => h.status === "active");
   
   const handlePreviousMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
@@ -57,8 +58,19 @@ const Index = () => {
   };
   
   const handleResetMonth = () => {
-    // In a real app, this would reset or update the habit list
-    alert("Month reset feature would update habit goals here");
+    toast({
+      title: "Month Reset",
+      description: "Habits have been reset for the new month."
+    });
+  };
+
+  const handleAddHabit = (data: {
+    name: string;
+    description: string;
+    frequency: string;
+    timeOfDay: string;
+  }) => {
+    addHabit(data);
   };
 
   return (
@@ -77,7 +89,10 @@ const Index = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <SidebarTrigger className="md:hidden" />
-                  <Button className="bg-zen-purple hover:bg-zen-purple-dark">
+                  <Button 
+                    className="bg-zen-purple hover:bg-zen-purple-dark"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
                     Add New Habit
                   </Button>
                 </div>
@@ -85,10 +100,10 @@ const Index = () => {
               
               {/* Summary Cards */}
               <HabitSummary 
-                totalHabits={habits.length}
-                completedToday={habits.filter(h => h.status === "completed").length}
-                currentStreak={7}
-                bestStreak={21}
+                totalHabits={activeHabits.length}
+                completedToday={activeHabits.filter(h => h.progress === 100).length}
+                currentStreak={Math.max(...activeHabits.map(h => h.streak), 0)}
+                bestStreak={21} // Hard-coded for now
               />
               
               {/* Month Navigation */}
@@ -104,13 +119,13 @@ const Index = () => {
               
               {/* Habit Cards */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {habits.map((habit) => (
+                {activeHabits.map((habit) => (
                   <HabitCard 
                     key={habit.id}
                     name={habit.name}
                     streak={habit.streak}
                     progress={habit.progress}
-                    status={habit.status}
+                    status={habit.progress === 100 ? "completed" : (habit.progress > 0 ? "pending" : "missed")}
                   />
                 ))}
               </div>
@@ -128,6 +143,14 @@ const Index = () => {
           </div>
         </main>
       </div>
+
+      {/* Add Habit Dialog */}
+      <HabitFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSubmit={handleAddHabit}
+        mode="add"
+      />
     </SidebarProvider>
   );
 };

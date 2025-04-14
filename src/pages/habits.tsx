@@ -23,84 +23,72 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-
-// Mock habits data with more details
-const habits = [
-  { 
-    id: 1, 
-    name: "Morning Meditation", 
-    description: "10 minutes of mindfulness practice",
-    frequency: "Daily",
-    timeOfDay: "Morning",
-    streak: 7, 
-    progress: 70, 
-    status: "active",
-    created: "2023-04-01",
-  },
-  { 
-    id: 2, 
-    name: "Read 30 minutes", 
-    description: "Read non-fiction books to learn new things",
-    frequency: "Daily",
-    timeOfDay: "Evening",
-    streak: 3, 
-    progress: 30, 
-    status: "active",
-    created: "2023-04-05",
-  },
-  { 
-    id: 3, 
-    name: "Exercise", 
-    description: "30 minutes of physical activity",
-    frequency: "3 times a week",
-    timeOfDay: "Afternoon",
-    streak: 0, 
-    progress: 0, 
-    status: "active",
-    created: "2023-04-10",
-  },
-  { 
-    id: 4, 
-    name: "Journaling", 
-    description: "Write down thoughts and gratitude",
-    frequency: "Daily",
-    timeOfDay: "Evening",
-    streak: 5, 
-    progress: 50, 
-    status: "active",
-    created: "2023-03-15",
-  },
-  { 
-    id: 5, 
-    name: "Drink water", 
-    description: "Drink 8 glasses of water throughout the day",
-    frequency: "Daily",
-    timeOfDay: "All day",
-    streak: 10, 
-    progress: 100, 
-    status: "active",
-    created: "2023-02-20",
-  },
-  { 
-    id: 6, 
-    name: "Learn a language", 
-    description: "Practice foreign language for 15 minutes",
-    frequency: "Daily",
-    timeOfDay: "Afternoon",
-    streak: 2, 
-    progress: 20, 
-    status: "active",
-    created: "2023-04-15",
-  },
-];
+import { HabitFormDialog } from "@/components/habits/HabitFormDialog";
+import { useHabits } from "@/contexts/HabitContext";
+import { useToast } from "@/hooks/use-toast";
 
 const HabitsPage = () => {
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const { 
+    habits, 
+    addHabit, 
+    updateHabit, 
+    deleteHabit, 
+    markHabitComplete, 
+    filterStatus, 
+    setFilterStatus 
+  } = useHabits();
+  
+  const { toast } = useToast();
+  
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentHabit, setCurrentHabit] = useState<typeof habits[0] | null>(null);
   
   // Filter habits based on status
   const filteredHabits = filterStatus === "all" 
     ? habits 
     : habits.filter(habit => habit.status === filterStatus);
+
+  const handleEdit = (habit: typeof habits[0]) => {
+    setCurrentHabit(habit);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (id: number, name: string) => {
+    deleteHabit(id);
+    toast({
+      title: "Habit deleted",
+      description: `"${name}" has been removed from your habits.`,
+    });
+  };
+
+  const handleMarkComplete = (id: number, name: string) => {
+    markHabitComplete(id);
+    toast({
+      title: "Habit completed",
+      description: `Great job completing "${name}"!`,
+    });
+  };
+
+  const handleAddSubmit = (data: {
+    name: string;
+    description: string;
+    frequency: string;
+    timeOfDay: string;
+  }) => {
+    addHabit(data);
+  };
+
+  const handleEditSubmit = (data: {
+    name: string;
+    description: string;
+    frequency: string;
+    timeOfDay: string;
+  }) => {
+    if (currentHabit) {
+      updateHabit(currentHabit.id, data);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -141,7 +129,10 @@ const HabitsPage = () => {
                       Archived
                     </Button>
                   </div>
-                  <Button className="bg-zen-purple hover:bg-zen-purple-dark">
+                  <Button 
+                    className="bg-zen-purple hover:bg-zen-purple-dark"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
                     Add New Habit
                   </Button>
                 </div>
@@ -166,16 +157,19 @@ const HabitsPage = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(habit)}>
                               <Edit className="mr-2 h-4 w-4" />
                               <span>Edit Habit</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleMarkComplete(habit.id, habit.name)}>
                               <Check className="mr-2 h-4 w-4" />
                               <span>Mark as Complete</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => handleDelete(habit.id, habit.name)}
+                            >
                               <Trash className="mr-2 h-4 w-4" />
                               <span>Delete Habit</span>
                             </DropdownMenuItem>
@@ -223,7 +217,10 @@ const HabitsPage = () => {
                       ? "Get started by creating your first habit" 
                       : `No ${filterStatus} habits found`}
                   </p>
-                  <Button className="mt-4 bg-zen-purple hover:bg-zen-purple-dark">
+                  <Button 
+                    className="mt-4 bg-zen-purple hover:bg-zen-purple-dark"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
                     Add New Habit
                   </Button>
                 </div>
@@ -232,6 +229,30 @@ const HabitsPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Add Habit Dialog */}
+      <HabitFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSubmit={handleAddSubmit}
+        mode="add"
+      />
+
+      {/* Edit Habit Dialog */}
+      {currentHabit && (
+        <HabitFormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSubmit={handleEditSubmit}
+          initialValues={{
+            name: currentHabit.name,
+            description: currentHabit.description,
+            frequency: currentHabit.frequency,
+            timeOfDay: currentHabit.timeOfDay,
+          }}
+          mode="edit"
+        />
+      )}
     </SidebarProvider>
   );
 };

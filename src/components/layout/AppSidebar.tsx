@@ -8,6 +8,8 @@ import {
   List, 
   Plus
 } from "lucide-react"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import {
   Sidebar,
@@ -22,6 +24,8 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { HabitFormDialog } from "@/components/habits/HabitFormDialog"
+import { useHabits } from "@/contexts/HabitContext"
 
 // Menu items for main navigation
 const items = [
@@ -53,52 +57,78 @@ const items = [
 ]
 
 export function AppSidebar() {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { addHabit } = useHabits();
+  const navigate = useNavigate();
+
+  const handleAddHabit = (data: {
+    name: string;
+    description: string;
+    frequency: string;
+    timeOfDay: string;
+  }) => {
+    addHabit(data);
+  };
+
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          <PanelRight className="h-6 w-6 text-zen-purple" />
-          <span className="text-xl font-medium">Zen Habits</span>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+    <>
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2">
+            <PanelRight className="h-6 w-6 text-zen-purple" />
+            <span className="text-xl font-medium">Zen Habits</span>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.url} className="flex items-center gap-3">
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Actions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center gap-3">
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </a>
+                    <Button 
+                      className="w-full justify-start gap-3 bg-zen-purple text-white hover:bg-zen-purple-dark"
+                      onClick={() => setIsAddDialogOpen(true)}
+                    >
+                      <Plus className="h-5 w-5" />
+                      <span>New Habit</span>
+                    </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          {/* Footer content */}
+        </SidebarFooter>
+      </Sidebar>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Button className="w-full justify-start gap-3 bg-zen-purple text-white hover:bg-zen-purple-dark">
-                    <Plus className="h-5 w-5" />
-                    <span>New Habit</span>
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        {/* Footer content */}
-      </SidebarFooter>
-    </Sidebar>
+      {/* Add Habit Dialog */}
+      <HabitFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSubmit={handleAddHabit}
+        mode="add"
+      />
+    </>
   )
 }
