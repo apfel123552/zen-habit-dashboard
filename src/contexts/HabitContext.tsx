@@ -125,7 +125,10 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteHabit = (id: number) => {
-    setHabits(habits.filter((habit) => habit.id !== id));
+    console.log(`Deleting habit with id: ${id}`);
+    const updatedHabits = habits.filter((habit) => habit.id !== id);
+    console.log(`Habits before deletion: ${habits.length}, after: ${updatedHabits.length}`);
+    setHabits(updatedHabits);
   };
 
   const markHabitComplete = (id: number) => {

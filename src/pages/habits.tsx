@@ -55,6 +55,7 @@ const HabitsPage = () => {
   };
 
   const handleDelete = (id: number, name: string) => {
+    console.log(`Attempting to delete habit: ${id} - ${name}`);
     deleteHabit(id);
     toast({
       title: "Habit deleted",
