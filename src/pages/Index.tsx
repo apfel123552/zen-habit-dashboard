@@ -8,7 +8,7 @@ import {
 } from "date-fns";
 
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { HabitSummary } from "@/components/dashboard/HabitSummary";
 import { HabitCard } from "@/components/dashboard/HabitCard";
 import { MonthlyToggle } from "@/components/dashboard/MonthlyToggle";
@@ -88,7 +88,6 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <SidebarTrigger className="md:hidden" />
                   <Button 
                     className="bg-zen-purple hover:bg-zen-purple-dark"
                     onClick={() => setIsAddDialogOpen(true)}

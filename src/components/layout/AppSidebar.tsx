@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { HabitFormDialog } from "@/components/habits/HabitFormDialog"
 import { useHabits } from "@/contexts/HabitContext"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 // Menu items for main navigation
 const items = [
@@ -72,55 +73,57 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2">
-            <PanelRight className="h-6 w-6 text-zen-purple" />
-            <span className="text-xl font-medium">Zen Habits</span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
+      <TooltipProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2 px-2">
+              <PanelRight className="h-6 w-6 text-zen-purple" />
+              <span className="text-xl font-medium">Zen Habits</span>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {items.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <a href={item.url} className="flex items-center gap-3">
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.title}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Actions</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
-                      </a>
+                      <Button 
+                        className="w-full justify-start gap-3 bg-zen-purple text-white hover:bg-zen-purple-dark"
+                        onClick={() => setIsAddDialogOpen(true)}
+                      >
+                        <Plus className="h-5 w-5" />
+                        <span>New Habit</span>
+                      </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Actions</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Button 
-                      className="w-full justify-start gap-3 bg-zen-purple text-white hover:bg-zen-purple-dark"
-                      onClick={() => setIsAddDialogOpen(true)}
-                    >
-                      <Plus className="h-5 w-5" />
-                      <span>New Habit</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          {/* Footer content */}
-        </SidebarFooter>
-      </Sidebar>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            {/* Footer content */}
+          </SidebarFooter>
+        </Sidebar>
+      </TooltipProvider>
 
       {/* Add Habit Dialog */}
       <HabitFormDialog
