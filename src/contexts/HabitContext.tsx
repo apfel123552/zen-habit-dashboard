@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 // Types
 export type HabitStatus = "active" | "archived";
@@ -101,8 +101,18 @@ const initialHabits: Habit[] = [
 const HabitContext = createContext<HabitContextType | null>(null);
 
 export function HabitProvider({ children }: { children: ReactNode }) {
-  const [habits, setHabits] = useState<Habit[]>(initialHabits);
+  // Load habits from localStorage or use initialHabits if nothing in storage
+  const [habits, setHabits] = useState<Habit[]>(() => {
+    const savedHabits = localStorage.getItem('habits');
+    return savedHabits ? JSON.parse(savedHabits) : initialHabits;
+  });
+  
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // Save habits to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('habits', JSON.stringify(habits));
+  }, [habits]);
 
   const addHabit = (newHabit: Omit<Habit, "id" | "streak" | "progress" | "status" | "created">) => {
     const habit: Habit = {
