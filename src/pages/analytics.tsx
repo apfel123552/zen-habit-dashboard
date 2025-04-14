@@ -6,46 +6,47 @@ import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveCalendar } from "@nivo/calendar";
 import { format, subMonths, subDays } from "date-fns";
-
-// Mock data for streak chart
-const streakData = [
-  {
-    id: "streak",
-    data: Array.from({ length: 30 }, (_, i) => ({
-      x: format(subDays(new Date(), 30 - i), "MMM dd"),
-      y: Math.floor(Math.random() * 10),
-    })),
-  },
-];
-
-// Mock data for habit completion
-const completionData = [
-  { habit: "Meditation", completed: 22, target: 30 },
-  { habit: "Reading", completed: 15, target: 30 },
-  { habit: "Exercise", completed: 8, target: 12 },
-  { habit: "Journaling", completed: 18, target: 30 },
-  { habit: "Water", completed: 30, target: 30 },
-  { habit: "Language", completed: 12, target: 20 },
-];
-
-// Mock data for heat map
-const calendarData = Array.from({ length: 180 }, (_, i) => {
-  const date = subMonths(new Date(), 6);
-  date.setDate(date.getDate() + i);
-  
-  return {
-    day: format(date, "yyyy-MM-dd"),
-    value: Math.random() > 0.3 ? Math.floor(Math.random() * 5) : 0
-  };
-});
-
-// Format data for completion rate chart
-const completionRateData = completionData.map(item => ({
-  habit: item.habit,
-  completed: (item.completed / item.target) * 100,
-}));
+import { useHabits } from "@/contexts/HabitContext";
 
 const AnalyticsPage = () => {
+  const { habits } = useHabits();
+  const activeHabits = habits.filter(h => h.status === "active");
+  
+  // Generate streak data from current habits
+  const streakData = [
+    {
+      id: "streak",
+      data: Array.from({ length: 30 }, (_, i) => ({
+        x: format(subDays(new Date(), 30 - i), "MMM dd"),
+        y: i < activeHabits.length ? activeHabits[i % activeHabits.length].streak : 0,
+      })),
+    },
+  ];
+
+  // Generate completion data from current habits
+  const completionData = activeHabits.map(habit => ({
+    habit: habit.name,
+    completed: habit.progress,
+    target: 100
+  }));
+
+  // Generate calendar data
+  const calendarData = Array.from({ length: 180 }, (_, i) => {
+    const date = subMonths(new Date(), 6);
+    date.setDate(date.getDate() + i);
+    
+    return {
+      day: format(date, "yyyy-MM-dd"),
+      value: Math.random() > 0.3 ? Math.floor(Math.random() * 5) : 0
+    };
+  });
+
+  // Format data for completion rate chart
+  const completionRateData = completionData.map(item => ({
+    habit: item.habit,
+    completed: (item.completed / item.target) * 100,
+  }));
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -70,42 +71,48 @@ const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent className="h-[300px]">
                   <div style={{ height: '100%', width: '100%' }}>
-                    <ResponsiveLine
-                      data={streakData}
-                      margin={{ top: 20, right: 20, bottom: 50, left: 50 }}
-                      xScale={{ type: 'point' }}
-                      yScale={{
-                        type: 'linear',
-                        min: 0,
-                        max: 'auto',
-                        stacked: false,
-                        reverse: false
-                      }}
-                      curve="natural"
-                      axisBottom={{
-                        tickSize: 5,
-                        tickPadding: 5,
-                        tickRotation: -45,
-                        legend: 'Date',
-                        legendOffset: 46,
-                        legendPosition: 'middle'
-                      }}
-                      axisLeft={{
-                        tickSize: 5,
-                        tickPadding: 5,
-                        tickRotation: 0,
-                        legend: 'Count',
-                        legendOffset: -40,
-                        legendPosition: 'middle'
-                      }}
-                      colors={["hsl(var(--primary))"]}
-                      pointSize={10}
-                      pointColor={{ theme: 'background' }}
-                      pointBorderWidth={2}
-                      pointBorderColor={{ from: 'serieColor' }}
-                      pointLabelYOffset={-12}
-                      useMesh={true}
-                    />
+                    {activeHabits.length > 0 ? (
+                      <ResponsiveLine
+                        data={streakData}
+                        margin={{ top: 20, right: 20, bottom: 50, left: 50 }}
+                        xScale={{ type: 'point' }}
+                        yScale={{
+                          type: 'linear',
+                          min: 0,
+                          max: 'auto',
+                          stacked: false,
+                          reverse: false
+                        }}
+                        curve="natural"
+                        axisBottom={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: -45,
+                          legend: 'Date',
+                          legendOffset: 46,
+                          legendPosition: 'middle'
+                        }}
+                        axisLeft={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: 'Count',
+                          legendOffset: -40,
+                          legendPosition: 'middle'
+                        }}
+                        colors={["hsl(var(--primary))"]}
+                        pointSize={10}
+                        pointColor={{ theme: 'background' }}
+                        pointBorderWidth={2}
+                        pointBorderColor={{ from: 'serieColor' }}
+                        pointLabelYOffset={-12}
+                        useMesh={true}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        No habit data available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -117,40 +124,46 @@ const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent className="h-[300px]">
                   <div style={{ height: '100%', width: '100%' }}>
-                    <ResponsiveBar
-                      data={completionRateData}
-                      keys={['completed']}
-                      indexBy="habit"
-                      margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                      padding={0.3}
-                      valueScale={{ type: 'linear' }}
-                      indexScale={{ type: 'band', round: true }}
-                      colors={["hsl(var(--primary))"]}
-                      borderRadius={4}
-                      axisBottom={{
-                        tickSize: 5,
-                        tickPadding: 5,
-                        tickRotation: -45,
-                        legend: 'Habit',
-                        legendPosition: 'middle',
-                        legendOffset: 40
-                      }}
-                      axisLeft={{
-                        tickSize: 5,
-                        tickPadding: 5,
-                        tickRotation: 0,
-                        legend: 'Completion Rate (%)',
-                        legendPosition: 'middle',
-                        legendOffset: -50
-                      }}
-                      labelSkipWidth={12}
-                      labelSkipHeight={12}
-                      labelTextColor={{
-                        from: 'color',
-                        modifiers: [['darker', 1.6]]
-                      }}
-                      animate={true}
-                    />
+                    {completionRateData.length > 0 ? (
+                      <ResponsiveBar
+                        data={completionRateData}
+                        keys={['completed']}
+                        indexBy="habit"
+                        margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                        padding={0.3}
+                        valueScale={{ type: 'linear' }}
+                        indexScale={{ type: 'band', round: true }}
+                        colors={["hsl(var(--primary))"]}
+                        borderRadius={4}
+                        axisBottom={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: -45,
+                          legend: 'Habit',
+                          legendPosition: 'middle',
+                          legendOffset: 40
+                        }}
+                        axisLeft={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: 'Completion Rate (%)',
+                          legendPosition: 'middle',
+                          legendOffset: -50
+                        }}
+                        labelSkipWidth={12}
+                        labelSkipHeight={12}
+                        labelTextColor={{
+                          from: 'color',
+                          modifiers: [['darker', 1.6]]
+                        }}
+                        animate={true}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        No habit data available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

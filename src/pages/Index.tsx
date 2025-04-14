@@ -5,6 +5,7 @@ import {
   format, 
   startOfMonth,
   subMonths, 
+  subDays,
 } from "date-fns";
 
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -19,25 +20,18 @@ import { HabitFormDialog } from "@/components/habits/HabitFormDialog";
 import { useHabits } from "@/contexts/HabitContext";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for the calendar and stats
-const calendarData = Array.from({ length: 180 }, (_, i) => {
-  const date = subMonths(new Date(), 6);
-  date.setDate(date.getDate() + i);
-  
-  return {
-    day: format(date, "yyyy-MM-dd"),
-    value: Math.random() > 0.3 ? Math.floor(Math.random() * 5) : 0
-  };
-});
-
-const statsData = [
-  { name: "Meditation", value: 22 },
-  { name: "Reading", value: 15 },
-  { name: "Exercise", value: 8 },
-  { name: "Journaling", value: 18 },
-  { name: "Water", value: 30 },
-  { name: "Language", value: 12 },
-];
+// Generate mock calendar data
+const generateCalendarData = () => {
+  return Array.from({ length: 180 }, (_, i) => {
+    const date = subMonths(new Date(), 6);
+    date.setDate(date.getDate() + i);
+    
+    return {
+      day: format(date, "yyyy-MM-dd"),
+      value: Math.random() > 0.3 ? Math.floor(Math.random() * 5) : 0
+    };
+  });
+};
 
 const Index = () => {
   const { habits, addHabit } = useHabits();
@@ -48,6 +42,15 @@ const Index = () => {
   
   // Get only active habits
   const activeHabits = habits.filter(h => h.status === "active");
+  
+  // Generate stats data based on current habits
+  const statsData = activeHabits.map((habit) => ({
+    name: habit.name,
+    value: habit.streak,
+  }));
+
+  // Generate calendar data
+  const calendarData = generateCalendarData();
   
   const handlePreviousMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
